@@ -1,0 +1,50 @@
+name: TransCargo CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-2
+  EKS_CLUSTER: transcargo-eks-cluster
+  ECR_REPOSITORY: transcargo-fleet
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build y Push
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd services/fleet-service
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG 831680222015.dkr.ecr.us-east-2.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push 831680222015.dkr.ecr.us-east-2.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Configurar kubeconfig
+        run: |
+          aws eks update-kubeconfig --name $EKS_CLUSTER --region $AWS_REGION
+
+      - name: Instalar Helm
+        uses: azure/setup-helm@v3
+
+      - name: Deploy
+        run: |
+          helm upgrade --install transcargo ./helm-charts/transcargo-chart \
+          --namespace production \
+          --set image.tag=${{ github.sha }}
