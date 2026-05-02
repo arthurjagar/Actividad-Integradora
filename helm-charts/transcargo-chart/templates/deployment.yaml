@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transcargo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transcargo
+  template:
+    metadata:
+      labels:
+        app: transcargo
+    spec:
+      containers:
+        - name: transcargo
+          image: 831680222015.dkr.ecr.us-east-2.amazonaws.com/transcargo-fleet:v1.0
+          ports:
+            - containerPort: 80

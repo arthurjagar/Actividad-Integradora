@@ -1,0 +1,10 @@
+replicaCount: 1
+
+image:
+  repository: 831680222015.dkr.ecr.us-east-2.amazonaws.com/transcargo-fleet
+  tag: "v1.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80

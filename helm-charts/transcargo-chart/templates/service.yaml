@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: transcargo-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: transcargo
+  ports:
+    - port: 80
+      targetPort: 80
